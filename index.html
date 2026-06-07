@@ -6,44 +6,134 @@
     <title>Clasificador CNN - Alzheimer MRI</title>
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.15.0"></script>
     <style>
-        :root { --main-color: aqua; --bg-color: #0d0d0d; --box-bg: #1a1a1a; }
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        body { background-color: var(--bg-color); color: white; padding: 30px; text-align: center; }
-        h1 { color: var(--main-color); margin-bottom: 5px; text-transform: uppercase; letter-spacing: 2px;}
-        h3 { color: #cccccc; margin-bottom: 20px; font-weight: 300; }
-        
-        .grid-container { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; max-width: 1000px; margin: 0 auto; }
-        .panel { background-color: var(--box-bg); border: 1px solid var(--main-color); border-radius: 8px; padding: 25px; box-shadow: 0 0 15px rgba(0, 255, 255, 0.1); }
-        
-        /* Controles y Botones */
-        input[type="file"] { display: block; width: 100%; padding: 10px; margin: 15px 0; background: #333; border: 1px dashed var(--main-color); color: white; cursor: pointer; }
-        button { width: 100%; background-color: transparent; border: 2px solid var(--main-color); color: var(--main-color); padding: 12px; font-size: 16px; font-weight: bold; cursor: pointer; transition: 0.3s; border-radius: 5px;}
-        button:hover:not(:disabled) { background-color: var(--main-color); color: black; }
-        button:disabled { border-color: #555; color: #555; cursor: not-allowed; }
-        
-        /* Imagen y Resultados */
-        #imagePreview { max-width: 200px; max-height: 200px; display: none; margin: 15px auto; border: 2px solid #555; border-radius: 5px; }
-        .status { margin-top: 15px; font-style: italic; color: #ffeb3b; }
-        .winner { color: #00ff00; font-size: 22px; font-weight: bold; margin: 15px 0; }
-        
-        /* Barras de Probabilidad */
-        .bar-wrap { text-align: left; margin: 10px 0; }
-        .bar-label { display: flex; justify-content: space-between; font-size: 14px; margin-bottom: 3px; }
-        .bar-bg { width: 100%; background: #333; border-radius: 4px; overflow: hidden; }
-        .bar-fill { height: 12px; background: var(--main-color); width: 0%; transition: width 0.6s ease-out; }
-        
-        /* Tabla de Métricas (Paso 8) */
-        table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 13px;}
-        th, td { border: 1px solid #444; padding: 8px; text-align: center; }
-        th { background-color: #222; color: var(--main-color); }
-        
-        @media (max-width: 768px) { .grid-container { grid-template-columns: 1fr; } }
+        :root {
+            --main: #00bcd4;
+            --bg: #ffffff;
+            --card: #f7f7f7;
+            --text: #222;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            background: var(--bg);
+            color: var(--text);
+            text-align: center;
+            padding: 20px;
+        }
+
+        /* Título */
+        h1 {
+            color: var(--main);
+            margin-bottom: 5px;
+        }
+        /* Contenedor centrado */
+        .grid-container {
+            display: flex;
+            justify-content: center;
+        }
+
+        /* Caja principal centrada */
+        .panel {
+            background: var(--card);
+            width: 100%;
+            max-width: 600px;
+            padding: 20px;
+            border-radius: 10px;
+        }
+
+        /* input */
+        input[type="file"] {
+            width: 100%;
+            margin: 10px 0;
+            padding: 8px;
+            border: 1px solid #ccc;
+            background: white;
+        }
+
+        /* botón */
+        button {
+            width: 100%;
+            padding: 10px;
+            margin-top: 10px;
+            background: var(--main);
+            border: none;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            border-radius: 6px;
+        }
+
+        button:disabled {
+            background: #aaa;
+            cursor: not-allowed;
+        }
+
+        /* imagen */
+        #imagePreview {
+            max-width: 200px;
+            margin: 15px auto;
+            display: none;
+            border-radius: 8px;
+        }
+
+        /* estado */
+        .status {
+            margin-top: 10px;
+            color: #666;
+        }
+
+        /* resultado */
+        .winner {
+            margin: 10px 0;
+            font-weight: bold;
+            color: var(--main);
+        }
+
+        /* barras */
+        .bar-wrap {
+            margin: 8px 0;
+            text-align: left;
+        }
+
+        .bar-label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 13px;
+        }
+
+        .bar-bg {
+            width: 100%;
+            height: 10px;
+            background: #ddd;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+
+        .bar-fill {
+            height: 10px;
+            width: 0%;
+            background: var(--main);
+            transition: width 0.5s;
+        }
+
+        /* responsive */
+        @media (max-width: 600px) {
+            .panel {
+                margin: 10px;
+            }
+        }
+   
     </style>
 </head>
 <body>
 
     <h1>Análisis de MRI Cerebral</h1>
-    <h3>Red Neuronal Convolucional (CNN) en JavaScript</h3>
 
     <div class="grid-container">
         <div class="panel">
@@ -59,58 +149,32 @@
                 <div class="winner" id="lblGanador"></div>
                 
                 <div class="bar-wrap">
-                    <div class="bar-label"><span>Non Demented</span><span id="val0">0%</span></div>
+                    <div class="bar-label"><span>Non Demented (Sin demencia)</span><span id="val0">0%</span></div>
                     <div class="bar-bg"><div class="bar-fill" id="bar0"></div></div>
                 </div>
                 <div class="bar-wrap">
-                    <div class="bar-label"><span>Very Mild Demented</span><span id="val1">0%</span></div>
+                    <div class="bar-label"><span>Very Mild Demented (Muy leve demencia)</span><span id="val1">0%</span></div>
                     <div class="bar-bg"><div class="bar-fill" id="bar1"></div></div>
                 </div>
                 <div class="bar-wrap">
-                    <div class="bar-label"><span>Mild Demented</span><span id="val2">0%</span></div>
+                    <div class="bar-label"><span>Mild Demented (Leve demencia)</span><span id="val2">0%</span></div>
                     <div class="bar-bg"><div class="bar-fill" id="bar2"></div></div>
                 </div>
                 <div class="bar-wrap">
-                    <div class="bar-label"><span>Moderate Demented</span><span id="val3">0%</span></div>
+                    <div class="bar-label"><span>Moderate Demented (Moderada demencia)</span><span id="val3">0%</span></div>
                     <div class="bar-bg"><div class="bar-fill" id="bar3"></div></div>
                 </div>
             </div>
         </div>
 
-        <div class="panel">
-            <h2 style="color: var(--main-color); border-bottom: 1px solid #333; padding-bottom: 10px;">Evaluación del Modelo</h2>
-            <p style="font-size: 13px; color: #aaa; margin-top: 10px;">Métricas extraídas de la fase de entrenamiento y validación técnica (Accuracy, Precision, Recall, F1-Score).</p>
-            
-            <table>
-                <tr><th>Clase</th><th>Accuracy</th><th>Precision</th><th>Recall</th><th>F1-Score</th></tr>
-                <tr><td>Non Demented</td><td>96.5%</td><td>0.95</td><td>0.97</td><td>0.96</td></tr>
-                <tr><td>Very Mild</td><td>92.1%</td><td>0.91</td><td>0.90</td><td>0.90</td></tr>
-                <tr><td>Mild Demented</td><td>89.4%</td><td>0.88</td><td>0.89</td><td>0.88</td></tr>
-                <tr><td>Moderate</td><td>98.2%</td><td>0.99</td><td>0.98</td><td>0.98</td></tr>
-            </table>
-
-            <h4 style="margin-top: 20px; color: var(--main-color);">Matriz de Confusión (4x4)</h4>
-            <table style="margin-top: 10px;">
-                <tr><th>Real \ Pred</th><th>Non</th><th>V. Mild</th><th>Mild</th><th>Mod</th></tr>
-                <tr><th>Non</th><td>850</td><td>12</td><td>5</td><td>0</td></tr>
-                <tr><th>V. Mild</th><td>18</td><td>620</td><td>10</td><td>0</td></tr>
-                <tr><th>Mild</th><td>4</td><td>15</td><td>480</td><td>2</td></tr>
-                <tr><th>Mod</th><td>0</td><td>0</td><td>1</td><td>120</td></tr>
-            </table>
-        </div>
     </div>
 
     <script>
-        // Paso 2.2: Clases de Clasificación
         const CLASES = ["Non Demented", "Very Mild Demented", "Mild Demented", "Moderate Demented"];
         let modelo;
 
-        // Paso 4: Definición estricta de la Arquitectura de la CNN (Tabla 2.3)
-        // Paso 4 y 5: Cargar el modelo pre-entrenado
         async function construirModelo() {
             try {
-                // Le dice a TensorFlow.js que descargue el cerebro ya entrenado
-                // Asegúrate de que model.json esté en la misma carpeta que este HTML
                 modelo = await tf.loadLayersModel('./model.json');
 
                 document.getElementById('statusMessage').innerText = "Modelo CNN entrenado cargado exitosamente.";
@@ -124,7 +188,6 @@
             }
         }
 
-        // Paso 2: Carga de la imagen mediante FileReader
         const fileInput = document.getElementById('fileInput');
         const imgElement = document.getElementById('imagePreview');
 
@@ -142,15 +205,11 @@
             }
         });
 
-        // Paso 3 y 6: Preprocesamiento e Inferencia
         async function procesarImagen() {
             document.getElementById('statusMessage').innerText = "Extrayendo características... (Inferencia en curso)";
             document.getElementById('statusMessage').style.color = "aqua";
             document.getElementById('btnAnalizar').disabled = true;
-
-            // setTimeout para permitir que la UI se actualice antes del procesamiento pesado
             setTimeout(async () => {
-                // Paso 3: Preproceso (Resize 128x128 + Normalización)
                 const tensor = tf.tidy(() => {
                     let img = tf.browser.fromPixels(imgElement);
                     let resized = tf.image.resizeBilinear(img, [128, 128]);
@@ -158,18 +217,14 @@
                     return normalized.expandDims(0); 
                 });
 
-                // Paso 6: CNN Infiere
                 const predicciones = await modelo.predict(tensor).data();
                 tensor.dispose(); 
-
-                // Lógica para demostración visual (simula pesos entrenados basados en inicialización)
                 let maxVal = 0;
                 let claseGanadora = 0;
                 for(let i=0; i<4; i++) {
                     if(predicciones[i] > maxVal) { maxVal = predicciones[i]; claseGanadora = i; }
                 }
 
-                // Paso 7: Visualización de Probabilidades
                 document.getElementById('resultadoBox').style.display = 'block';
                 document.getElementById('lblGanador').innerText = `Diagnóstico: ${CLASES[claseGanadora]}`;
 
@@ -185,7 +240,6 @@
             }, 500);
         }
 
-        // Arrancar la red al cargar la página
         window.onload = construirModelo;
     </script>
 </body>
